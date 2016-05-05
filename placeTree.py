@@ -199,11 +199,11 @@ class Grid:
 
 # test Grid class
 gridTest = Grid(4, 5, inputs, outputs, gatesExam)
-#for each in gridTest._IOLocs.keys():
-#    print each
-#print gridTest._IOLocs
-#for each in gridTest._gates:
-#    print each
+for each in gridTest._IOLocs.keys():
+    print each
+print gridTest._IOLocs
+for each in gridTest._gates:
+    print each
 
 class Placement:
     """
@@ -219,6 +219,33 @@ class Placement:
         self._gates = grid.getGates()
         for each in self._gates:
             self._delayTables[each] = table
+    
+    def buildTables(self):
+        """
+        Method to build delay tables for each gate
+        """
+        for each in self._gates:
+            pass
+            # first, we need to deal with inputs. Since inputs and outputs are
+            # fixed. Do we have to process output? Probably yes, because we
+            # need to find the delay of the signal when it reaches the output.
+            # At the same time choose the best location for v3
+
+            # tentative algo: check if the gate is IO or not. If the gate has
+            # no fanin then it is an input, update its fixed location in the
+            # table to 0, leave other locations as inf. 
+
+            # for v1, v2: just use the delay table of the inputs as normal
+            # steps (take v1 as example): fix a location for v1, then check all
+            # locations of inputs of v1 and find the location that get the min
+            # delay. Then record the optimal fanin locations. Do all the above
+            # for all possible locations for v1. 
+            
+            # Need to find a way to store locations of fanins
+            # idea: each gate will have another dict. Format of information:
+            # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
+            # inside locOpt[currentGate] is another dict
+
 
 
 def manhattanDelay(x1, y1, x2, y2):
@@ -228,8 +255,8 @@ def manhattanDelay(x1, y1, x2, y2):
     """
     return (x2 - x1)**2 + (y2 - y1)**2
 
-placeTest = Placement(gridTest, manhattanDelay)
-for each in placeTest._delayTables.keys():
-    print each
+#placeTest = Placement(gridTest, manhattanDelay)
+#for each in placeTest._delayTables.keys():
+#    print each
 
 # Next: delay table building algo
