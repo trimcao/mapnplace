@@ -179,6 +179,8 @@ class Grid:
         # process outputs
         for each in outputs:
             self._IOLocs[each[0]] = each[1]
+        # NOTE: also need to store the locations of all gates
+        self._locs = dict()
         self._gates = gates
         self._gates.extend(self._IOLocs.keys())
         # Note: current idea is to build delay tables for all gates, including
@@ -187,11 +189,24 @@ class Grid:
         self._gates = topoSorter.sort(self._gates)
 
     def __str__(self):
-        return str(self._grid)
+        s = ''
+        height = self.getHeight()
+        width = self.getWidth()
+        for i in range(height):
+            for j in range(width):
+                if len(self._grid[j][i]) > 0:
+                    for gate in self._grid[j][i]:
+                        s = s + str(gate) + ','
+                else:
+                    s += 'x'
+                s += '    '
+            s += '\n'
+        return s
 
     def fill(self, gate, col, row):
         # only use this method at the end of placement process
         self._grid[col][row].add(gate)
+        self._locs[gate] = (col, row)
 
     def getHeight(self):
         return self._height
@@ -204,6 +219,9 @@ class Grid:
 
     def getIOLoc(self, IO):
         return self._IOLocs[IO]
+
+    def getLoc(self, gate):
+        return self._locs[gate]
 
 # test Grid class
 gridTest = Grid(4, 5, inputs, outputs, gatesExam)
@@ -233,11 +251,6 @@ class Placement:
         self._locOpt = dict()
         #self._possibleLocs = dict()
         for each in self._gates:
-            # initialize possibleLocs
-            #if (each.isIO()):
-            #    pass
-            #else:
-
             self._delayTables[each] = dict()
             # initialize the locOpt
             self._locOpt[each] = dict()
@@ -246,14 +259,14 @@ class Placement:
 
     def getLocations(self):
         return self._locations
-    
+
     def setLocOpt(self, outGate, locOut, inGate, locIn):
         self._locOpt[outGate][locOut][inGate] = locIn
 
     def setDelay(self, gate, loc, delay):
         self._delayTables[gate][loc] = delay
 
-    
+
     def buildTables(self):
         """
         Method to build delay tables for each gate
@@ -275,8 +288,8 @@ class Placement:
             # steps (take v1 as example): fix a location for v1, then check all
             # locations of inputs of v1 and find the location that get the min
             # delay. Then record the optimal fanin locations. Do all the above
-            # for all possible locations for v1. 
-    
+            # for all possible locations for v1.
+
             # Need to find a way to store locations of fanins
             # idea: each gate will have another dict. Format of information:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
@@ -285,10 +298,9 @@ class Placement:
                 possibleLocs = [self._grid.getIOLoc(each)]
             else:
                 possibleLocs = locations
-            # process each possible location    
-           
-            for loc in possibleLocs:     
-                #loc = self._grid.getIOLoc(each)
+            # process each possible location
+
+            for loc in possibleLocs:
                 # initialize to find the maxDelay
                 maxDelay = each.getDelay()
                 for fanin in each.getInputs():
@@ -296,17 +308,18 @@ class Placement:
                     minInLoc = (-1, -1)
                     # probably we only need to consider the locations present
                     # in the delay table
-                    for inLoc in self._delayTables[fanin].keys(): 
+                    for inLoc in self._delayTables[fanin].keys():
                         inDelay = self._delayTables[fanin][inLoc]
                         delay = inDelay + self._delayModel(loc, inLoc) + each.getDelay()
                         # find the min delay
-                        if (delay < minInLoc):
+                        # NOTE: we might have multiple minDelay, that leads to
+                        # multiple solutions
+                        if (delay <= minDelay):
                             minDelay = delay
                             minInLoc = inLoc
                     # remember the optimal location for the fanin
-                    self.setLocOpt(each, loc, fanin, minInLoc)  
+                    self.setLocOpt(each, loc, fanin, minInLoc)
                     # update the maxDelay
-                    print minDelay
                     if (minDelay > maxDelay):
                         maxDelay = minDelay
                 # update delay for current loc in delay table
@@ -317,7 +330,26 @@ class Placement:
         for loc in self._delayTables[gate].keys():
             table[loc[0]][loc[1]] = self._delayTables[gate][loc]
         return table
-        
+
+    def getOptLoc(self, outGate, locOut, inGate):
+        return self._locOpt[outGate][locOut][inGate]
+
+    def place(self):
+        # idea: for IOs, just put them to their fixed positions
+        for i in range(len(self._gates) - 1, -1, -1):
+            currentGate = self._gates[i]
+            if (currentGate.isIO()):
+                loc = self._grid.getIOLoc(currentGate)
+                self._grid.fill(currentGate, loc[0], loc[1])
+            else:
+                fanout = list(currentGate.getOutputs())[0] # we are only dealing with trees
+                if (fanout.isIO()):
+                    fanoutLoc = self._grid.getIOLoc(fanout)
+                else:
+                    fanoutLoc = self._grid.getLoc(fanout)
+                loc = self.getOptLoc(fanout, fanoutLoc, currentGate)
+                self._grid.fill(currentGate, loc[0], loc[1])
+
 
 def manhattanDelay(loc1, loc2):
     """
@@ -350,3 +382,11 @@ for each in testPlace._gates:
         s += '\n'
     print s
     print
+
+# try to compute by hand
+#print testPlace._delayTables[v1][(0, 0)]
+testPlace.place()
+print testPlace._grid
+
+# NOTE: I probably have to correct result now, it is different from the example
+# in the paper but the two solutions are both correct
