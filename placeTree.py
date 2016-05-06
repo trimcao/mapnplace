@@ -48,6 +48,9 @@ class Gate:
     def getOutputs(self):
         return self._outputs
 
+    def getInputs(self):
+        return self._inputs
+
 
 class TopoSort:
     """
@@ -168,6 +171,8 @@ class Grid:
         #self._inputs = inputs
         #self._outputs = outputs
         self._IOLocs = dict()
+        # NOTE: probably don't need to differentiate inputs from outputs, they
+        # work the same
         # process inputs
         for each in inputs:
             self._IOLocs[each[0]] = each[1]
@@ -197,13 +202,16 @@ class Grid:
     def getGates(self):
         return self._gates
 
+    def getIOLoc(self, IO):
+        return self._IOLocs[IO]
+
 # test Grid class
 gridTest = Grid(4, 5, inputs, outputs, gatesExam)
-for each in gridTest._IOLocs.keys():
-    print each
-print gridTest._IOLocs
-for each in gridTest._gates:
-    print each
+#for each in gridTest._IOLocs.keys():
+#    print each
+#print gridTest._IOLocs
+#for each in gridTest._gates:
+#    print each
 
 class Placement:
     """
@@ -215,48 +223,130 @@ class Placement:
         self._grid = grid
         self._delayModel = delayModel
         self._delayTables = dict()
-        table = [[float('inf') for i in range(grid.getHeight())] for j in range(grid.getWidth())]
+        # probably delay table should be a dict, not a 2d array
+        self._locations = []
+        for i in range(grid.getWidth()):
+            for j in range(grid.getHeight()):
+                self._locations.append((i, j))
+        #table = [[float('inf') for i in range(grid.getHeight())] for j in range(grid.getWidth())]
         self._gates = grid.getGates()
+        self._locOpt = dict()
+        #self._possibleLocs = dict()
         for each in self._gates:
-            self._delayTables[each] = table
+            # initialize possibleLocs
+            #if (each.isIO()):
+            #    pass
+            #else:
+
+            self._delayTables[each] = dict()
+            # initialize the locOpt
+            self._locOpt[each] = dict()
+            for loc in self._locations:
+                self._locOpt[each][loc] = dict()
+
+    def getLocations(self):
+        return self._locations
+    
+    def setLocOpt(self, outGate, locOut, inGate, locIn):
+        self._locOpt[outGate][locOut][inGate] = locIn
+
+    def setDelay(self, gate, loc, delay):
+        self._delayTables[gate][loc] = delay
+
     
     def buildTables(self):
         """
         Method to build delay tables for each gate
         """
+        height = self._grid.getHeight()
+        width = self._grid.getWidth()
+        locations = self.getLocations()
+        possibleLocs = []
         for each in self._gates:
-            pass
             # first, we need to deal with inputs. Since inputs and outputs are
             # fixed. Do we have to process output? Probably yes, because we
             # need to find the delay of the signal when it reaches the output.
             # At the same time choose the best location for v3
 
-            # tentative algo: check if the gate is IO or not. If the gate has
-            # no fanin then it is an input, update its fixed location in the
-            # table to 0, leave other locations as inf. 
+            # tentative algo: check if the gate is IO or not. For an IO, we
+            # only have to consider one location (its fixed location)
 
             # for v1, v2: just use the delay table of the inputs as normal
             # steps (take v1 as example): fix a location for v1, then check all
             # locations of inputs of v1 and find the location that get the min
             # delay. Then record the optimal fanin locations. Do all the above
             # for all possible locations for v1. 
-            
+    
             # Need to find a way to store locations of fanins
             # idea: each gate will have another dict. Format of information:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
             # inside locOpt[currentGate] is another dict
+            if each.isIO():
+                possibleLocs = [self._grid.getIOLoc(each)]
+            else:
+                possibleLocs = locations
+            # process each possible location    
+           
+            for loc in possibleLocs:     
+                #loc = self._grid.getIOLoc(each)
+                # initialize to find the maxDelay
+                maxDelay = each.getDelay()
+                for fanin in each.getInputs():
+                    minDelay = float('inf')
+                    minInLoc = (-1, -1)
+                    # probably we only need to consider the locations present
+                    # in the delay table
+                    for inLoc in self._delayTables[fanin].keys(): 
+                        inDelay = self._delayTables[fanin][inLoc]
+                        delay = inDelay + self._delayModel(loc, inLoc) + each.getDelay()
+                        # find the min delay
+                        if (delay < minInLoc):
+                            minDelay = delay
+                            minInLoc = inLoc
+                    # remember the optimal location for the fanin
+                    self.setLocOpt(each, loc, fanin, minInLoc)  
+                    # update the maxDelay
+                    print minDelay
+                    if (minDelay > maxDelay):
+                        maxDelay = minDelay
+                # update delay for current loc in delay table
+                self.setDelay(each, loc, maxDelay)
 
+    def getDelayTable(self, gate):
+        table = [[float('inf') for i in range(self._grid.getHeight())] for j in range(self._grid.getWidth())]
+        for loc in self._delayTables[gate].keys():
+            table[loc[0]][loc[1]] = self._delayTables[gate][loc]
+        return table
+        
 
-
-def manhattanDelay(x1, y1, x2, y2):
+def manhattanDelay(loc1, loc2):
     """
     Manhattan Delay model
     Delay between two nodes = square of manhattan distance between the nodes
     """
-    return (x2 - x1)**2 + (y2 - y1)**2
+    x1 = loc1[0]
+    y1 = loc1[1]
+    x2 = loc2[0]
+    y2 = loc2[1]
+    return (abs(x2 - x1) + abs(y2 - y1))**2
 
 #placeTest = Placement(gridTest, manhattanDelay)
 #for each in placeTest._delayTables.keys():
 #    print each
 
-# Next: delay table building algo
+# test Placement
+testPlace = Placement(gridTest, manhattanDelay)
+testPlace.buildTables()
+for each in testPlace._gates:
+    table = testPlace.getDelayTable(each)
+    #for i in range(len(table)):
+    #    print table[i]
+    #print
+    # print
+    s = ''
+    for row in range(len(table[0])):
+        for col in range(len(table)):
+          s = s + str(table[col][row]) + '  '
+        s += '\n'
+    print s
+    print
