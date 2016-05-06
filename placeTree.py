@@ -6,7 +6,8 @@ Email: tricao@utdallas.edu
 Date: April 2016
 """
 
-# first, implement a draft class Gate and write a topological sort method
+# NOTE: what I need to do: optimize the code, add user input feature (user can
+# add a grid and add input and output
 
 class Gate:
     """
