@@ -9,10 +9,19 @@ Date: April 2016
 # NOTE: what I need to do: optimize the code, add user input feature (user can
 # add a grid and add input and output
 
+#NOTE: class Gate should not contain inputs and outputs information. Instead,
+# class Grid should do that. 
+# The reason I included in/out in Gate is I want to implement the TopoSort
+# method using only class Gate.
+# Because if we want to sort the Gates then we need interconnection info, one
+# way is add a dict of interconnection parameter to the TopoSort class. Another
+# way is to keep it like this, but the Grid class will initialize the
+# interconnection info in each Gate object.
+
 class Gate:
     """
     this class represents a gate in the circuits
-    parameters include: inputs, outputs, delay, ...
+    parameters include: delay, ...
     """
     def __init__(self, name, delay = 0, IO = False):
         self._name = name
