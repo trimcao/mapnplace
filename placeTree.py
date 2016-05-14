@@ -9,19 +9,10 @@ Date: April 2016
 # NOTE: what I need to do: optimize the code, add user input feature (user can
 # add a grid and add input and output
 
-#NOTE: class Gate should not contain inputs and outputs information. Instead,
-# class Grid should do that. 
-# The reason I included in/out in Gate is I want to implement the TopoSort
-# method using only class Gate.
-# Because if we want to sort the Gates then we need interconnection info, one
-# way is add a dict of interconnection parameter to the TopoSort class. Another
-# way is to keep it like this, but the Grid class will initialize the
-# interconnection info in each Gate object.
-
 class Gate:
     """
     this class represents a gate in the circuits
-    parameters include: delay, ...
+    parameters include: delay, arrival time, etc.
     """
     def __init__(self, name, delay = 0, IO = False):
         self._name = name
@@ -43,57 +34,43 @@ class Gate:
     def getDelay(self):
         return self._delay
 
-    def addIn(self, inp):
-        self._inputs.add(inp)
-
-    def addOut(self, out):
-        self._outputs.add(out)
-
-    def numIn(self):
-        return len(self._inputs)
-
-    def numOut(self):
-        return len(self._outputs)
-
-    def getOutputs(self):
-        return self._outputs
-
-    def getInputs(self):
-        return self._inputs
-
-
 class TopoSort:
     """
     TopoSort class to sort the gates topologically
     """
-
     def __init__(self):
         self.unvisited = set()
         self.visited = set()
         self.tempVisited = set() # later
         self.result = []
 
-    def sort(self, gates):
+    def sort(self, gates, outputs):
         """
         Sort the gates topologically based on outputs
-
+        Input: gates is the list of gates; outputs is a dict containing inter-
+        connections data of these gates
         Note: probably we need a class to do topoSort properly
         Need to add temporary marked
         """
         self.unvisited = set(gates)
         self.visited = set()
         self.tempVisited = set() # later
+        self.result = []
         while (len(self.unvisited) > 0):
             currentGate = self.unvisited.pop()
-            self.visit(currentGate)
+            #print outputs
+            self.visit(currentGate, outputs)
         return self.result
 
-    def visit(self, gate):
+    def visit(self, gate, outputs):
         if not (gate in self.visited):
-            for each in gate.getOutputs():
-                self.visit(each)
+            # check if key 'gate' existed in the outputs dict
+            if (gate in outputs):
+                for each in outputs[gate]:
+                    self.visit(each, outputs)
             self.visited.add(gate)
             self.result.insert(0, gate)
+
 """
 # examples of gates
 g1 = Gate('g1')
@@ -110,70 +87,39 @@ g1.addOut(g3)
 g3.addOut(g5)
 g2.addOut(g4)
 g4.addOut(g5)
+outputs = {}
+outputs[g1] = set([g3])
+outputs[g3] = set([g5])
+outputs[g2] = set([g4])
+outputs[g4] = set([g5])
 
 #print g3._outputs
 
 gates = [g5, g3, g2, g4, g1]
 #topoSort(gates)
 topoSorter = TopoSort()
-result = topoSorter.sort(gates)
+result = topoSorter.sort(gates, outputs)
 for each in result:
     print each
 """
-# May 04, 2016: implement delay table for each of the gates
-# how do we do the placement? we will build a delay table for each gate
-# where do we store the delay table? Probably we will use another class called
-# Placement class. How about Mapping?
-
-# Mapping and Placement algo is a modified version of Placement algo, so
-# it will live separately.
-# Mapping and Placement has two phases: Matching and Covering. Covering is
-# very simple. I think I got the main idea behind it.
-
-# We need classes like Grid and Gate to work with different placement algorithms.
-# So we cannot keep the delay table inside Grid.
-# Since IOs and their positions are specific to one grid, we keep them in
-# Grid class
-
-# Examples of IOs
-# Note: the position rule in the paper is based on x-y cartesian axis (weird)
-# however, I think it will be fine
-# Also, the first row is 1, not 0. It should be ok I believe
-in1 = Gate("I1", IO = True)
-in2 = Gate("I2", IO = True)
-v1 = Gate("v1", delay = 1)
-v2 = Gate("v2", delay = 1)
-v3 = Gate("v3", delay = 1)
-out = Gate("O", IO = True)
-
-# interconnections
-v1.addOut(v3)
-v2.addOut(v3)
-v3.addIn(v1)
-v3.addIn(v2)
-v3.addOut(out)
-out.addIn(v3)
-in1.addOut(v1)
-in2.addOut(v2)
-v1.addIn(in1)
-v2.addIn(in2)
-gatesExam = [v1, v2, v3]
-inputs = [(in1, (0, 0)), (in2, (0, 3))]
-outputs = [(out, (4, 1))]
-
 
 class Grid:
     """
     class Grid consists of a 2d array to represent the Grid
     the class also takes care of positioning of gates, and position of IO nodes
+    Grid will contain the interconnection data between gates
     """
-    def __init__(self, height, width, inputs, outputs, gates):
+    def __init__(self, height, width, ios, gates, inCons = {}, outCons = {}):
         """
         IOs are represented as gates with fixed positions
         inputs and outputs are list of IOs and their positions (as tuple)
         gates is a list of gates, excluding the IOs
         We represent the grid by a 2d list, each position in the grid, in turn,
         is a list of gates (one position may have multiple gates).
+
+        ios: list of IOs gates and locations
+        inCons and outCons: dicts of interconnections of the gates, these dicts
+            can be provided during initialization.
         """
         self._height = height
         self._width = width
@@ -183,11 +129,8 @@ class Grid:
         self._IOLocs = dict()
         # NOTE: probably don't need to differentiate inputs from outputs, they
         # work the same
-        # process inputs
-        for each in inputs:
-            self._IOLocs[each[0]] = each[1]
-        # process outputs
-        for each in outputs:
+        # process inputs and outputs
+        for each in ios:
             self._IOLocs[each[0]] = each[1]
         # NOTE: also need to store the locations of all gates
         self._locs = dict()
@@ -195,8 +138,15 @@ class Grid:
         self._gates.extend(self._IOLocs.keys())
         # Note: current idea is to build delay tables for all gates, including
         # IOs
-        topoSorter = TopoSort()
-        self._gates = topoSorter.sort(self._gates)
+
+        self._inCons = inCons
+        self._outCons = outCons
+
+        # we need to sort each time we do a new placement
+        self._topoSorter = TopoSort()
+        # NOTE: must re-write the following line. Must initialize the interconnections
+        # within Grid class.
+        #self._gates = topoSorter.sort(self._gates, outputs)
 
     def __str__(self):
         s = ''
@@ -233,13 +183,89 @@ class Grid:
     def getLoc(self, gate):
         return self._locs[gate]
 
+    def addIn(self, gate, inp):
+        if gate in self._inCons:
+            self._inCons[gate].add(inp)
+        else:
+            self._inCons[gate] = set([inp])
+
+    def addOut(self, gate, out):
+        if gate in self._outCons:
+            self._outCons[gate].add(out)
+        else:
+            self._outCons[gate] = set([out])
+
+    def numIn(self, gate):
+        if gate in self._inCons:
+            return len(self._inCons[gate])
+        else:
+            return 0
+
+    def numOut(self, gate):
+        if gate in self._outCons:
+            return len(self._outCons[gate])
+        else:
+            return 0
+
+    def getOutputs(self, gate):
+        if gate in self._outCons:
+            return self._outCons[gate]
+        else:
+            return set()
+
+    def getInputs(self, gate):
+        if gate in self._inCons:
+            return self._inCons[gate]
+        else:
+            return set()
+
+    def topoSort(self):
+        self._gates = self._topoSorter.sort(self._gates, self._outCons)
+
+
+# Examples of IOs
+# Note: the position rule in the paper is based on x-y cartesian axis (weird)
+# however, I think it will be fine
+# Also, the first row is 1, not 0. It should be ok I believe
+in1 = Gate("I1", IO = True)
+in2 = Gate("I2", IO = True)
+v1 = Gate("v1", delay = 1)
+v2 = Gate("v2", delay = 1)
+v3 = Gate("v3", delay = 1)
+out = Gate("O", IO = True)
+
+gatesExam = [v1, v2, v3]
+#inputs = [(in1, (0, 0)), (in2, (0, 3))]
+#outputs = [(out, (4, 1))]
+ios = [(in1, (0, 0)), (in2, (0, 3)), (out, (4, 1))]
+
+
 # test Grid class
-gridTest = Grid(4, 5, inputs, outputs, gatesExam)
+gridTest = Grid(4, 5, ios, gatesExam)
 #for each in gridTest._IOLocs.keys():
 #    print each
 #print gridTest._IOLocs
 #for each in gridTest._gates:
 #    print each
+
+# interconnections
+gridTest.addOut(v1, v3)
+gridTest.addOut(v2, v3)
+gridTest.addIn(v3, v1)
+gridTest.addIn(v3, v2)
+
+gridTest.addOut(v3, out)
+gridTest.addIn(out, v3)
+gridTest.addOut(in1, v1)
+gridTest.addOut(in2, v2)
+gridTest.addIn(v1, in1)
+gridTest.addIn(v2, in2)
+
+#gridTest.topoSort()
+#for each in gridTest.getGates():
+#    print each
+
+#print gridTest._outCons
 
 class Placement:
     """
@@ -257,6 +283,8 @@ class Placement:
             for j in range(grid.getHeight()):
                 self._locations.append((i, j))
         #table = [[float('inf') for i in range(grid.getHeight())] for j in range(grid.getWidth())]
+        # call topoSort
+        self._grid.topoSort()
         self._gates = grid.getGates()
         self._locOpt = dict()
         #self._possibleLocs = dict()
@@ -276,30 +304,18 @@ class Placement:
     def setDelay(self, gate, loc, delay):
         self._delayTables[gate][loc] = delay
 
-
     def buildTables(self):
         """
         Method to build delay tables for each gate
         """
+        # call topoSort
+        self._grid.topoSort()
+        self._gates = self._grid.getGates()
         height = self._grid.getHeight()
         width = self._grid.getWidth()
         locations = self.getLocations()
         possibleLocs = []
         for each in self._gates:
-            # first, we need to deal with inputs. Since inputs and outputs are
-            # fixed. Do we have to process output? Probably yes, because we
-            # need to find the delay of the signal when it reaches the output.
-            # At the same time choose the best location for v3
-
-            # tentative algo: check if the gate is IO or not. For an IO, we
-            # only have to consider one location (its fixed location)
-
-            # for v1, v2: just use the delay table of the inputs as normal
-            # steps (take v1 as example): fix a location for v1, then check all
-            # locations of inputs of v1 and find the location that get the min
-            # delay. Then record the optimal fanin locations. Do all the above
-            # for all possible locations for v1.
-
             # Need to find a way to store locations of fanins
             # idea: each gate will have another dict. Format of information:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
@@ -309,11 +325,11 @@ class Placement:
             else:
                 possibleLocs = locations
             # process each possible location
-
             for loc in possibleLocs:
                 # initialize to find the maxDelay
                 maxDelay = each.getDelay()
-                for fanin in each.getInputs():
+                for fanin in self._grid.getInputs(each):
+                #for fanin in each.getInputs():
                     minDelay = float('inf')
                     minInLoc = (-1, -1)
                     # probably we only need to consider the locations present
@@ -352,7 +368,7 @@ class Placement:
                 loc = self._grid.getIOLoc(currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
             else:
-                fanout = list(currentGate.getOutputs())[0] # we are only dealing with trees
+                fanout = list(self._grid.getOutputs(currentGate))[0] # we are only dealing with trees
                 if (fanout.isIO()):
                     fanoutLoc = self._grid.getIOLoc(fanout)
                 else:
@@ -377,6 +393,7 @@ def manhattanDelay(loc1, loc2):
 #    print each
 
 # test Placement
+
 testPlace = Placement(gridTest, manhattanDelay)
 testPlace.buildTables()
 for each in testPlace._gates:
