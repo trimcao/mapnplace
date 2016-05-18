@@ -131,6 +131,8 @@ class Grid:
         self._gates = gates
         # add IOs to the self._gates list
         self._gates.extend(self._IOLocs.keys())
+        # NOTE: may be a better idea to initialize the inCons and outCons with
+        # all gates in the grid.
         self._inCons = inCons
         self._outCons = outCons
         # we need to sort each time we do a new placement
@@ -283,7 +285,7 @@ gridTest.addIn(v2, in2)
 
 class Placement:
     """
-    class Placement takes a grid object as an input, then a build delay table for
+    class Placement takes a grid object as an input, then build a  delay table for
     each gate existed in the grid.
     It will return an grid with gates in optimal locations.
     """

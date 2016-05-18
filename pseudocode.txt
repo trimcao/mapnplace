@@ -1,0 +1,15 @@
+
+class Gate to represent each gate in the circuit. 
+    A Gate object stores gate-related information like name, delay, interconnections.
+
+class TopoSort to do topological sorting for the gates.
+
+class Grid to represent a layout. 
+    A Grid will store a list of gates in the layout, show the position of each gate
+    in the layout, contain the interconnection info between gates. 
+
+class Placement is used to do the placement-for-tree algorithm. Since placement-for-tree
+and placement-for-DAG will be two different algorithms, I want to make sure other
+classes like Gate and Grid will work with both algorithms. 
+
+Pseudocode for the placement-for-tree algo is listed in the paper.  
