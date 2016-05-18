@@ -130,7 +130,7 @@ class Grid:
         self._locs = dict()
         self._gates = gates
         # add IOs to the self._gates list
-        self._gates.extend(self._IOLocs.keys())
+        #self._gates.extend(self._IOLocs.keys())
         # NOTE: may be a better idea to initialize the inCons and outCons with
         # all gates in the grid.
         self._inCons = inCons
@@ -239,7 +239,7 @@ class Grid:
         """
         self._gates = self._topoSorter.sort(self._gates, self._outCons)
 
-
+"""
 # Examples of IOs
 # Note: the position rule in the paper is based on x-y cartesian axis (weird)
 # however, I think it will be fine
@@ -251,7 +251,7 @@ v2 = Gate("v2", delay = 1)
 v3 = Gate("v3", delay = 1)
 out = Gate("O", IO = True)
 
-gatesExam = [v1, v2, v3]
+gatesExam = [v1, v2, v3, in1, in2, out]
 #inputs = [(in1, (0, 0)), (in2, (0, 3))]
 #outputs = [(out, (4, 1))]
 ios = [(in1, (0, 0)), (in2, (0, 3)), (out, (4, 1))]
@@ -282,6 +282,8 @@ gridTest.addIn(v2, in2)
 #    print each
 
 #print gridTest._outCons
+
+"""
 
 class Placement:
     """
@@ -400,6 +402,8 @@ class Placement:
                 loc = self._grid.getIOLoc(currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
             else:
+                #print currentGate
+                #print self._grid.getOutputs(currentGate)
                 fanout = list(self._grid.getOutputs(currentGate))[0] # we are only dealing with trees
                 if (fanout.isIO()):
                     fanoutLoc = self._grid.getIOLoc(fanout)
@@ -408,6 +412,14 @@ class Placement:
                 loc = self.getOptLoc(fanout, fanoutLoc, currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
 
+    def delayTableToStr(self, gate):
+        table = self.getDelayTable(gate)
+        s = ''
+        for row in range(len(table[0])):
+            for col in range(len(table)):
+                s = s + str(table[col][row]) + '  '
+            s += '\n'
+        return s
 
 def manhattanDelay(loc1, loc2):
     """
@@ -420,7 +432,8 @@ def manhattanDelay(loc1, loc2):
     y2 = loc2[1]
     return (abs(x2 - x1) + abs(y2 - y1))**2
 
-#placeTest = Placement(gridTest, manhattanDelay)
+"""
+placeTest = Placement(gridTest, manhattanDelay)
 #for each in placeTest._delayTables.keys():
 #    print each
 
@@ -428,6 +441,7 @@ def manhattanDelay(loc1, loc2):
 
 testPlace = Placement(gridTest, manhattanDelay)
 testPlace.buildTables()
+
 for each in testPlace._gates:
     table = testPlace.getDelayTable(each)
     #for i in range(len(table)):
@@ -446,6 +460,6 @@ for each in testPlace._gates:
 #print testPlace._delayTables[v1][(0, 0)]
 testPlace.place()
 print testPlace._grid
-
+"""
 # NOTE: I probably have to correct result now, it is different from the example
 # in the paper but the two solutions are both correct

@@ -1,0 +1,22 @@
+
+Inputs from text - Idea:
+- Initialize a list of gates, including IOs
+- When processing an IO, get its position, and initialize the ios list as well
+- Make inCons and outCons dict on-the-go
+- Create a Grid object based on these data (we need a Grid object, then it's
+  easy to do placement)
+
+Idea: the names of the gates are integer numbers (i.e. 0, 1, 2, 3, ....).
+    So when we create the inCons and outCons dict, we can specify the gate by
+    gateList[index]
+
+Format of gate:
+    number of gates
+    name(id) [space] gateDelay(arrival time) [space] isIO?
+
+Format of output connections (then also add input connections)
+    (each line is information for a gate)
+    originGateID [space] gateOutput1 [space] gateOutput2 [space] ....
+    originGateID (this gate has no output connection)
+    
+    
