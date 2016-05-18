@@ -66,37 +66,6 @@ class TopoSort:
             self.visited.add(gate)
             self.result.insert(0, gate)
 
-"""
-# examples of gates
-g1 = Gate('g1')
-g2 = Gate('g2')
-g3 = Gate('g3')
-g4 = Gate('g4')
-g5 = Gate('g5')
-
-#print g1
-#print g2
-
-# add inputs and outputs
-g1.addOut(g3)
-g3.addOut(g5)
-g2.addOut(g4)
-g4.addOut(g5)
-outputs = {}
-outputs[g1] = set([g3])
-outputs[g3] = set([g5])
-outputs[g2] = set([g4])
-outputs[g4] = set([g5])
-
-#print g3._outputs
-
-gates = [g5, g3, g2, g4, g1]
-#topoSort(gates)
-topoSorter = TopoSort()
-result = topoSorter.sort(gates, outputs)
-for each in result:
-    print each
-"""
 
 class Grid:
     """
@@ -239,51 +208,6 @@ class Grid:
         """
         self._gates = self._topoSorter.sort(self._gates, self._outCons)
 
-"""
-# Examples of IOs
-# Note: the position rule in the paper is based on x-y cartesian axis (weird)
-# however, I think it will be fine
-# Also, the first row is 1, not 0. It should be ok I believe
-in1 = Gate("I1", IO = True)
-in2 = Gate("I2", IO = True)
-v1 = Gate("v1", delay = 1)
-v2 = Gate("v2", delay = 1)
-v3 = Gate("v3", delay = 1)
-out = Gate("O", IO = True)
-
-gatesExam = [v1, v2, v3, in1, in2, out]
-#inputs = [(in1, (0, 0)), (in2, (0, 3))]
-#outputs = [(out, (4, 1))]
-ios = [(in1, (0, 0)), (in2, (0, 3)), (out, (4, 1))]
-
-# test Grid class
-gridTest = Grid(4, 5, ios, gatesExam)
-#for each in gridTest._IOLocs.keys():
-#    print each
-#print gridTest._IOLocs
-#for each in gridTest._gates:
-#    print each
-
-# interconnections
-gridTest.addOut(v1, v3)
-gridTest.addOut(v2, v3)
-gridTest.addIn(v3, v1)
-gridTest.addIn(v3, v2)
-
-gridTest.addOut(v3, out)
-gridTest.addIn(out, v3)
-gridTest.addOut(in1, v1)
-gridTest.addOut(in2, v2)
-gridTest.addIn(v1, in1)
-gridTest.addIn(v2, in2)
-
-#gridTest.topoSort()
-#for each in gridTest.getGates():
-#    print each
-
-#print gridTest._outCons
-
-"""
 
 class Placement:
     """
@@ -432,34 +356,5 @@ def manhattanDelay(loc1, loc2):
     y2 = loc2[1]
     return (abs(x2 - x1) + abs(y2 - y1))**2
 
-"""
-placeTest = Placement(gridTest, manhattanDelay)
-#for each in placeTest._delayTables.keys():
-#    print each
-
-# test Placement
-
-testPlace = Placement(gridTest, manhattanDelay)
-testPlace.buildTables()
-
-for each in testPlace._gates:
-    table = testPlace.getDelayTable(each)
-    #for i in range(len(table)):
-    #    print table[i]
-    #print
-    # print
-    s = ''
-    for row in range(len(table[0])):
-        for col in range(len(table)):
-          s = s + str(table[col][row]) + '  '
-        s += '\n'
-    print s
-    print
-
-# try to compute by hand
-#print testPlace._delayTables[v1][(0, 0)]
-testPlace.place()
-print testPlace._grid
-"""
 # NOTE: I probably have to correct result now, it is different from the example
 # in the paper but the two solutions are both correct

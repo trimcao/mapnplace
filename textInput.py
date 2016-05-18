@@ -10,11 +10,11 @@ import placeTree as pt
 
 # create gate list and ios list
 # NOTE: later, input test file name by user
-
+filename = raw_input('Enter the input file name: ')
 # initialize the lists
 gates = []
 ios = []
-f = open("test1.txt", "r")
+f = open(filename, "r")
 # read the number of gates
 numGates = int(f.readline().split()[0])
 for i in range(numGates):
@@ -57,25 +57,9 @@ print gates
 
 # test Placement
 testPlace1 = pt.Placement(gridTest1, pt.manhattanDelay)
-
-for each in testPlace1._gates:
-    print each
-
 testPlace1.buildTables()
-
 for each in testPlace1._gates:
     print testPlace1.delayTableToStr(each)
-    """
-    table = testPlace1.getDelayTable(each)
-    s = ''
-    for row in range(len(table[0])):
-        for col in range(len(table)):
-            s = s + str(table[col][row]) + '  '
-        s += '\n'
-    print s
-    print
-    """
-# try to compute by hand
-# print testPlace._delayTables[v1][(0, 0)]
+# placement from delay tables
 testPlace1.place()
 print testPlace1._grid
