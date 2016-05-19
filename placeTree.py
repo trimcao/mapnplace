@@ -98,12 +98,15 @@ class Grid:
         # store the locations of all gates in the locs dict
         self._locs = dict()
         self._gates = gates
-        # add IOs to the self._gates list
-        #self._gates.extend(self._IOLocs.keys())
         # NOTE: may be a better idea to initialize the inCons and outCons with
         # all gates in the grid.
-        self._inCons = inCons
+        self._inCons = inCons   
         self._outCons = outCons
+        for gate in self._gates:
+            if (not gate in self._inCons):
+                self.inCons[gate] = set()
+            if (not gate in self._outCons):
+                self.outCons[gate] = set()
         # we need to sort each time we do a new placement
         self._topoSorter = TopoSort()
 

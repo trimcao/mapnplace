@@ -11,6 +11,7 @@ import placeTree as pt
 # create gate list and ios list
 # NOTE: later, input test file name by user
 filename = raw_input('Enter the input file name: ')
+print
 # initialize the lists
 gates = []
 ios = []
@@ -53,7 +54,6 @@ f.close()
 
 # Try test1.txt data
 gridTest1 = pt.Grid(4, 5, ios, gates, inCons, outCons)
-print gates
 
 # test Placement
 testPlace1 = pt.Placement(gridTest1, pt.manhattanDelay)
