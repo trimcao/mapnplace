@@ -1,0 +1,139 @@
+Placement algorithm code description
+Tri Minh Cao
+tricao@utdallas.edu
+May 2016
+
+------------------------------------------
+
+Object-oriented approach.
+
+1. Gate class
+- Each gate/node is modeled as a Gate object.
+- A Gate object contains info: name, arrival time (delay), whether it is an input/
+output (isIO).
+
+2. Grid class
+- A Grid object consists of a list of gates, input/output data and interconnections data
+between the gates.
+
+3. TopoSort class
+- This is a helper class to do topological sorting of the gates.
+- To sort the gates, initialize a TopoSort object and call the topoSort() method.
+
+4. Delay Models
+- Different delay models can be defined and used with the Placement algorithm.
+- The current code has the Manhattan delay model.
+
+5. Placement class
+- Placement class implements the placement-for-tree algorithm.
+- The main methods of the algorithm are Build Delay Tables and Placement.
+Pseudocode of these methods are provided below.
+
+6. Build Delay Tables
+- Delay tables are stored as dictionaries. A top-level dictionary is also needed
+    to access each gate's delay table.
+    Assume pt is a Placement object
+    To access a gate's delay table dict: pt._delayTables[gate]
+
+- While building delay tables, we also have to store the optimal locations for the
+    fan-ins of each gate, for each of its location.
+    In other words, each gate will have a dictionary of locations. For each location,
+    we have another dictionary to store the optimal locations for each fan-in.
+
+    To access the dictionary of locations of a gate: pt._locOpt[gate]
+    To access the fan-ins' optimal locations for a specific location of a gate:
+        pt._locOpt[gate][location]
+
+    For example, we need to get the location of the fan-in 'in' of a gate named
+    'gate1', when 'gate1' is located at (2, 3):
+        pt._locOpt[gate1][(2,3)][in]
+    Also, we can use a provided method, getOptLoc:
+        pt.getOptLoc(gate1, (2,3), in)
+
+- Pseudocode for building a delay table of a gate:
+    Make sure to process the gates in topological order because to make a correct
+    delay table, we need info from all fan-ins' delay tables.
+
+    First, get a list of possible locations for a gate. If a location is not possible,
+        then its value in the delay table will be +inf.
+    If the gate is an IO (input/output), then it will have a fixed location.
+    For other gates, all locations of the grid are valid.
+
+    Iterate over all possible locations of a gate. In other words, in each iteration,
+        fix a location for the gate.
+    Process each fan-in of the gate.
+        Check all possible locations of a fan-in, get delay data from its delay table.
+        Compute the total delay from the fan-in to the gate.
+        After checking all possible locations, we will find the optimal location
+            of the fan-in for the fixed location of the gate (with minimal delay).
+        Record the optimal location for the fan-in (as mentioned above).
+
+    Among all the optimal delay values from fan-ins, choose the maximum delay as the entry
+    for the fixed location in the delay table.
+    At the end, the delay table will store the optimal delay value for each possible location
+    of a gate.
+
+7. Placement based on delay tables
+- Pseudocode for placement:
+    After building all the delay tables, iterate the gates in reverse topological order.
+    If the gate is an IO, then place it to its fixed location.
+
+    For other gates, look for the location of the fan-out (we only have one fan-out
+    for each gate because we only deal with trees). With the location of the fan-out
+    already determined, we can find the optimal location of the gate by using method
+    getOptLoc mentioned above.
+
+    At the end, we will have the delay-optimal placement of the circuit.
+
+- If we want unique solution, then probably we need more criteria other than delay.
+    But a complex circuit may not have too many optimal placements anyway.
+
+
+8. Input from Text
+- To facilitate testing, users can give input data to the algorithm via text files.
+- The required data include two parts: gate data, and connections data
+- For the gate data, all gates including IOs have names as integers starting from 0.
+- The connections data include the output connections from each gate.
+
+format of gate:
+    number of gates
+    name(id) [space] gateDelay(arrival time) [space] isIO? [space] col [space] row
+
+    (the col and row are used to indicate location of an IO node, other gates will
+    not need location data)
+
+format of output connections
+    (each line is information for a gate)
+    originGateID [space] gateOutput1 [space] gateOutput2 [space] ....
+    originGateID (this gate has no output connection)
+
+- Example of a data file (the same example in the paper):
+6
+0 0 True 0 0
+1 0 True 0 3
+2 1 False
+3 1 False
+4 1 False
+5 0 True 4 1
+0 2
+1 3
+2 4
+3 4
+4 5
+5
+
+- Description of the above input data:
+    number 6 in the first line = number of gates including IOs
+    there are 3 IOs nodes. Two inputs: 0 and 1, located at (0, 0) and (0, 3)
+        respectively. (0, 3) means the node is located at column 0 (first column),
+        and row 3 (fourth row).
+    Nodes 2, 3, 4 are normal gates.
+    The next lines are connections data. Output of node 0 is node 2. Output of
+    both node 3 and 4 is node 5. Node 5 is the output, so it does not have a fan-out.
+
+9. Running the algorithm
+- Run textInput.py with command: python textInput.py
+(make sure the directory also has placeTree.py)
+- The program will ask for the input file name, enter the file name
+Example: test1.txt
+- The program will output the delay tables for each gate, and the final placement

@@ -100,7 +100,7 @@ class Grid:
         self._gates = gates
         # NOTE: may be a better idea to initialize the inCons and outCons with
         # all gates in the grid.
-        self._inCons = inCons   
+        self._inCons = inCons
         self._outCons = outCons
         for gate in self._gates:
             if (not gate in self._inCons):
@@ -233,10 +233,11 @@ class Placement:
                 self._locations.append((i, j))
         # call topoSort to sort the gates topologically
         self._grid.topoSort()
-        self._gates = grid.getGates()
+        self._gates = self._grid.getGates()
         # initialize the locOpt, a dict to store the optimal location for each gate
         self._locOpt = dict()
         for each in self._gates:
+            # each delay table is a dictionary itself
             self._delayTables[each] = dict()
             self._locOpt[each] = dict()
             for loc in self._locations:
@@ -295,7 +296,7 @@ class Placement:
                         # find the min delay
                         # NOTE: we might have multiple minDelay, that leads to
                         # multiple solutions
-                        if (delay <= minDelay):
+                        if (delay < minDelay):
                             minDelay = delay
                             minInLoc = inLoc
                     # remember the optimal location for the fanin
@@ -329,9 +330,7 @@ class Placement:
                 loc = self._grid.getIOLoc(currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
             else:
-                #print currentGate
-                #print self._grid.getOutputs(currentGate)
-                fanout = list(self._grid.getOutputs(currentGate))[0] # we are only dealing with trees
+                fanout = list(self._grid.getOutputs(currentGate))[0] # we only deal with trees
                 if (fanout.isIO()):
                     fanoutLoc = self._grid.getIOLoc(fanout)
                 else:
@@ -340,6 +339,9 @@ class Placement:
                 self._grid.fill(currentGate, loc[0], loc[1])
 
     def delayTableToStr(self, gate):
+        """
+        Return the delay table of a gate as string (for printing and debugging)
+        """
         table = self.getDelayTable(gate)
         s = ''
         for row in range(len(table[0])):
@@ -359,5 +361,5 @@ def manhattanDelay(loc1, loc2):
     y2 = loc2[1]
     return (abs(x2 - x1) + abs(y2 - y1))**2
 
-# NOTE: I probably have to correct result now, it is different from the example
+# NOTE: I probably have the correct result now, it is different from the example
 # in the paper but the two solutions are both correct
