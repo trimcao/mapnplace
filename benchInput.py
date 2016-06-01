@@ -33,6 +33,8 @@ filename = "c17.bench"
 gates = []
 ios = []
 gatesID = set()
+inCons = {}
+outCons = {}
 f = open(filename, "r")
 # read all lines in one loop
 # two types of line: input/output and normal gate. 
@@ -57,8 +59,6 @@ for line in f:
             # get gate ID
             iden = int(info[0])
             #print iden
-            #if (not iden in gatesID):
-            #    gatesID.add(iden)
 
             # get gate type
             name = ''
@@ -86,6 +86,20 @@ for line in f:
             cons = cons.split(',')
             print cons
             # now each fan-in  is an element of the cons array 
+
+            # create the gate
+            if (not iden in gatesID):
+                gatesID.add(iden)
+                # suppose all gate delay = 1
+                newGate = pt.Gate(iden, delay=1, IO=False)
+                inCons[newGate] = set()
+                outCons[newGate] = set()
+                gates.append(newGate)
+            # add the connection
+            # now I see the problem, if we want to point to actual gate in the
+            # dict, then it's not straightforward
+            # Idea: create a map between gateID and actual gate object!
+            inCons
 
         else:
             #print "io"
@@ -115,7 +129,8 @@ for line in f:
             gatesID.add(iden)
             #IOLoc?
             #ios.append(newGate)
-
+            inCons[newGate] = set()
+            outCons[newGate] = set()
             
 
 
