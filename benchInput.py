@@ -18,31 +18,43 @@ IDEA:
     - We will build inCons list on-the-fly
 """
 
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 # create gate list and ios list
-filename = raw_input('Enter the input file name: ')
-print
+#filename = raw_input('Enter the input file name: ')
+#print
+filename = "c17.bench"
 # initialize the lists
 gates = []
 ios = []
 f = open(filename, "r")
-# read the number of gates
-numGates = int(f.readline().split()[0])
-for i in range(numGates):
-    info = f.readline()
+# read all lines in one loop
+# two types of line: input/output and normal gate. 
+# probably use two separate methods to deal with these two types above is a
+# good move
+
+# important line: 
+# newGate = pt.Gate(gateName, gateDelay, isIO)
+# ios.append((newGate, IOLoc))
+for line in f:
+    info = line
     # remove spaces and newline
     info = info.split()
-    gateName = info[0]
-    gateDelay = int(info[1])
-    isIO = False
-    if (info[2] == 'True'):
-        isIO = True
-        IOLoc = (int(info[3]), int(info[4]))
-    # initialize the gate
-    newGate = pt.Gate(gateName, gateDelay, isIO)
-    gates.append(newGate)
-    if (isIO):
-        ios.append((newGate, IOLoc))
+    print info
+    if (len(info) > 0):
+        if info[0] == "#":
+            print "comment"
+        elif isNumber(info[0]):
+            print "normal gate"
+        else:
+            print "io"
 
+"""
 # make inCons and outCons dictionaries and create a Grid object
 inCons = {}
 outCons = {}
@@ -72,3 +84,5 @@ for each in testPlace1._gates:
 # placement from delay tables
 testPlace1.place()
 print testPlace1._grid
+"""
+
