@@ -32,6 +32,7 @@ filename = "c17.bench"
 # initialize the lists
 gates = []
 ios = []
+gatesID = set()
 f = open(filename, "r")
 # read all lines in one loop
 # two types of line: input/output and normal gate. 
@@ -45,14 +46,78 @@ for line in f:
     info = line
     # remove spaces and newline
     info = info.split()
-    print info
     if (len(info) > 0):
         if info[0] == "#":
-            print "comment"
+            #print "comment"
+            pass
         elif isNumber(info[0]):
-            print "normal gate"
+            #print "normal gate"
+            # there will be output in this type of line as well
+
+            # get gate ID
+            iden = int(info[0])
+            #print iden
+            #if (not iden in gatesID):
+            #    gatesID.add(iden)
+
+            # get gate type
+            name = ''
+            typeNCons = info[2]
+            for i in range(len(typeNCons)):
+                if (typeNCons[i] != '('):
+                    name += typeNCons[i]
+                else:
+                    signIdx = i
+                    break
+            print name
+
+            # combine all connections info
+            consInfo = ''
+            for i in range(2, len(info)):
+                consInfo += info[i]
+            # get connections
+            cons = ''            
+            for i in range(signIdx + 1, len(consInfo)):
+                if (consInfo[i] != ')'):
+                    cons += consInfo[i]
+                else:
+                    break
+            # split again using ','
+            cons = cons.split(',')
+            print cons
+            # now each fan-in  is an element of the cons array 
+
         else:
-            print "io"
+            #print "io"
+            # get io gate name
+            # get input and output
+            txtOrg = info[0]
+            name = ''
+            for i in range(len(txtOrg)):
+                if (txtOrg[i] != '('):
+                    name += txtOrg[i]
+                else:
+                    signIdx = i
+                    break
+            # get ID
+            iden = ''
+            for i in range(signIdx + 1, len(txtOrg)):
+                if (txtOrg[i] != ')'):
+                    iden += txtOrg[i]
+                else:
+                    break
+            iden = int(iden)
+            #print iden
+
+            # build the io gate
+            newGate = pt.Gate(iden, delay=0, IO=True)
+            gates.append(newGate)
+            gatesID.add(iden)
+            #IOLoc?
+            #ios.append(newGate)
+
+            
+
 
 """
 # make inCons and outCons dictionaries and create a Grid object
