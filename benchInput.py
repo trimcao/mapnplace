@@ -16,6 +16,10 @@ IDEA:
     - Assume 'NAND' is just a gate with constant delay. We will do something
     with different gates later.
     - We will build inCons list on-the-fly
+
+QUESTION:
+    - Where to store Grid size and IOs' location?
+
 """
 
 def isNumber(s):
@@ -28,11 +32,13 @@ def isNumber(s):
 # create gate list and ios list
 #filename = raw_input('Enter the input file name: ')
 #print
-filename = "c17.bench"
+filename = "test1.bench"
 # initialize the lists
-gates = []
+gates = [] 
+iosGates = []
 ios = []
 gatesID = set()
+gatesMap = dict()
 inCons = {}
 outCons = {}
 f = open(filename, "r")
@@ -53,7 +59,7 @@ for line in f:
             #print "comment"
             pass
         elif isNumber(info[0]):
-            #print "normal gate"
+            # NORMAL GATE
             # there will be output in this type of line as well
 
             # get gate ID
@@ -69,7 +75,6 @@ for line in f:
                 else:
                     signIdx = i
                     break
-            print name
 
             # combine all connections info
             consInfo = ''
@@ -84,14 +89,14 @@ for line in f:
                     break
             # split again using ','
             cons = cons.split(',')
-            print cons
-            # now each fan-in  is an element of the cons array 
+            # now each fan-in is an element of the cons array 
 
             # create the gate
-            if (not iden in gatesID):
-                gatesID.add(iden)
+            if (not iden in gatesMap):
+                #gatesID.add(iden)
                 # suppose all gate delay = 1
                 newGate = pt.Gate(iden, delay=1, IO=False)
+                gatesMap[iden] = newGate 
                 inCons[newGate] = set()
                 outCons[newGate] = set()
                 gates.append(newGate)
@@ -99,10 +104,14 @@ for line in f:
             # now I see the problem, if we want to point to actual gate in the
             # dict, then it's not straightforward
             # Idea: create a map between gateID and actual gate object!
-            inCons
+            for fanin in cons:
+                gateIn = gatesMap[int(fanin)]
+                currGate = gatesMap[iden]
+                inCons[currGate].add(gateIn)
+                outCons[gateIn].add(currGate)
 
         else:
-            #print "io"
+            # IO case:
             # get io gate name
             # get input and output
             txtOrg = info[0]
@@ -121,39 +130,31 @@ for line in f:
                 else:
                     break
             iden = int(iden)
-            #print iden
-
             # build the io gate
             newGate = pt.Gate(iden, delay=0, IO=True)
             gates.append(newGate)
-            gatesID.add(iden)
-            #IOLoc?
+            #gatesID.add(iden)
+            gatesMap[iden] = newGate
             #ios.append(newGate)
+            #iosGates.add(newGate)
             inCons[newGate] = set()
             outCons[newGate] = set()
             
+#print gatesMap
+#print inCons
 
-
-"""
-# make inCons and outCons dictionaries and create a Grid object
-inCons = {}
-outCons = {}
-for gate in gates:
-    inCons[gate] = set()
-    outCons[gate] = set()
-
-for line in f:
-    info = line.split()
-    originID = int(info[0])
-    if (len(info) > 1):
-        for i in range(1, len(info)):
-            destID = int(info[i])
-            outCons[gates[originID]].add(gates[destID])
-            inCons[gates[destID]].add(gates[originID])
 # done reading file
 f.close()
 
-# Try test1.txt data
+# create ios list
+# input 1: (0, 0)
+# input 2: (0, 3)
+# output: (4, 1)
+ios.append((gatesMap[1], (0,0)))
+ios.append((gatesMap[2], (0, 3))) 
+ios.append((gatesMap[22], (4, 1)))
+
+# Try test1.bench data
 gridTest1 = pt.Grid(4, 5, ios, gates, inCons, outCons)
 
 # test Placement
@@ -164,5 +165,5 @@ for each in testPlace1._gates:
 # placement from delay tables
 testPlace1.place()
 print testPlace1._grid
-"""
+
 
