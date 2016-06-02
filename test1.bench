@@ -1,0 +1,19 @@
+# test 1
+# 2 inputs
+# 1 outputs
+# 6 gates ( 6 NANDs )
+
+INPUT(1)
+INPUT(2)
+
+OUTPUT(22)
+
+10 = NAND(1)
+12 = NAND(2)
+16 = NAND(10, 12)
+22 = NAND(16)
+
+# input 1: (0, 0)
+# input 2: (0, 3)
+# output: (4, 1)
+# output (case 2): (1, 3)

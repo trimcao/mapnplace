@@ -22,7 +22,7 @@ class Gate:
         self._isIO = IO
 
     def __str__(self):
-        return self._name
+        return str(self._name)
 
     def isIO(self):
         return self._isIO
@@ -118,6 +118,7 @@ class Grid:
             for j in range(width):
                 if len(self._grid[j][i]) > 0:
                     for gate in self._grid[j][i]:
+                        # careful: gate is a Gate object
                         s = s + str(gate) + ','
                 else:
                     s += 'x'

@@ -152,7 +152,8 @@ f.close()
 # output: (4, 1)
 ios.append((gatesMap[1], (0,0)))
 ios.append((gatesMap[2], (0, 3))) 
-ios.append((gatesMap[22], (4, 1)))
+#ios.append((gatesMap[22], (4, 1)))
+ios.append((gatesMap[22], (1, 3)))
 
 # Try test1.bench data
 gridTest1 = pt.Grid(4, 5, ios, gates, inCons, outCons)
