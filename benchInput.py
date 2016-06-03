@@ -8,18 +8,11 @@ Date: May 2016
 """
 
 import placeTree as pt
+import delayLookup as dl
 
 """
-IDEA:
-    - Don't read line with comment #
-    - Read Input and Outputs without locations
-    - Assume 'NAND' is just a gate with constant delay. We will do something
-    with different gates later.
-    - We will build inCons list on-the-fly
-
 QUESTION:
     - Where to store Grid size and IOs' location?
-
 """
 
 def isNumber(s):
@@ -35,7 +28,6 @@ def isNumber(s):
 filename = "test1.bench"
 # initialize the lists
 gates = [] 
-iosGates = []
 ios = []
 gatesID = set()
 gatesMap = dict()
@@ -44,12 +36,6 @@ outCons = {}
 f = open(filename, "r")
 # read all lines in one loop
 # two types of line: input/output and normal gate. 
-# probably use two separate methods to deal with these two types above is a
-# good move
-
-# important line: 
-# newGate = pt.Gate(gateName, gateDelay, isIO)
-# ios.append((newGate, IOLoc))
 for line in f:
     info = line
     # remove spaces and newline
@@ -60,12 +46,8 @@ for line in f:
             pass
         elif isNumber(info[0]):
             # NORMAL GATE
-            # there will be output in this type of line as well
-
             # get gate ID
             iden = int(info[0])
-            #print iden
-
             # get gate type
             name = ''
             typeNCons = info[2]
@@ -75,7 +57,6 @@ for line in f:
                 else:
                     signIdx = i
                     break
-
             # combine all connections info
             consInfo = ''
             for i in range(2, len(info)):
@@ -90,20 +71,16 @@ for line in f:
             # split again using ','
             cons = cons.split(',')
             # now each fan-in is an element of the cons array 
-
             # create the gate
             if (not iden in gatesMap):
-                #gatesID.add(iden)
-                # suppose all gate delay = 1
-                newGate = pt.Gate(iden, delay=1, IO=False)
+                # get the delay of the cell from lookup table
+                gateDelay = dl.table[name]
+                newGate = pt.Gate(iden, delay=gateDelay, IO=False)
                 gatesMap[iden] = newGate 
                 inCons[newGate] = set()
                 outCons[newGate] = set()
                 gates.append(newGate)
             # add the connection
-            # now I see the problem, if we want to point to actual gate in the
-            # dict, then it's not straightforward
-            # Idea: create a map between gateID and actual gate object!
             for fanin in cons:
                 gateIn = gatesMap[int(fanin)]
                 currGate = gatesMap[iden]
@@ -136,7 +113,6 @@ for line in f:
             #gatesID.add(iden)
             gatesMap[iden] = newGate
             #ios.append(newGate)
-            #iosGates.add(newGate)
             inCons[newGate] = set()
             outCons[newGate] = set()
             
@@ -146,6 +122,9 @@ for line in f:
 # done reading file
 f.close()
 
+"""
+The following code only works for the "test1.bench" test
+"""
 # create ios list
 # input 1: (0, 0)
 # input 2: (0, 3)
