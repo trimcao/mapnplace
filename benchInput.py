@@ -27,8 +27,10 @@ def isNumber(s):
 # create gate list and ios list
 #filename = raw_input('Enter the input file name: ')
 #print
-filename = "c17.bench"
+filename = "test1.bench"
+#filename = "c17.bench"
 #filename = "c432.bench"
+#filename = "c880.bench"
 # initialize the lists
 gates = []
 ios = []
@@ -172,7 +174,7 @@ print testPlace1._grid
 # dimensions: possibly square for easy test, sqrt(#gates*6)
 numGates = len(gates)
 #print numGates
-dim = int(math.sqrt(numGates * 2))
+dim = int(math.sqrt(numGates * 6))
 #print dim
 
 # choose locations for ios
@@ -184,10 +186,12 @@ dim = int(math.sqrt(numGates * 2))
 
 for each in inputs:
     row = random.randrange(0, dim)
-    ios.append((gatesMap[each], (0, row)))
+    #ios.append((gatesMap[each], (0, row)))
+    ios.append((each, (0, row)))
 for each in outputs:
     row = random.randrange(0, dim)
-    ios.append((gatesMap[each], (dim - 1, row)))
+    #ios.append((gatesMap[each], (dim - 1, row)))
+    ios.append((each, (dim - 1, row)))
 
 
 # Try test1.bench data

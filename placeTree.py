@@ -285,7 +285,7 @@ class Placement:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
             # inside locOpt[currentGate] is another dict
             if each.isIO():
-                possibleLocs = [self._grid.getIOLoc(each)]
+                possibleLocs = [self._grid.getIOLoc(each.getID())]
             else:
                 possibleLocs = locations
             # process each possible location
