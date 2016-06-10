@@ -27,8 +27,8 @@ def isNumber(s):
 # create gate list and ios list
 #filename = raw_input('Enter the input file name: ')
 #print
-#filename = "c17.bench"
-filename = "c432.bench"
+filename = "c17.bench"
+#filename = "c432.bench"
 # initialize the lists
 gates = []
 ios = []
@@ -83,13 +83,13 @@ for line in f:
                 gateDelay = dl.table[name]
                 newGate = pt.Gate(iden, delay=gateDelay, IO=False)
                 gatesMap[iden] = newGate
-                inCons[newGate] = set()
-                outCons[newGate] = set()
+                inCons[newGate.getID()] = set()
+                outCons[newGate.getID()] = set()
                 gates.append(newGate)
             # add the connection
             for fanin in cons:
-                gateIn = gatesMap[int(fanin)]
-                currGate = gatesMap[iden]
+                gateIn = int(fanin)
+                currGate = iden
                 inCons[currGate].add(gateIn)
                 outCons[gateIn].add(currGate)
 
@@ -123,14 +123,17 @@ for line in f:
             #gatesID.add(iden)
             gatesMap[iden] = newGate
             #ios.append(newGate)
-            inCons[newGate] = set()
-            outCons[newGate] = set()
+            inCons[newGate.getID()] = set()
+            outCons[newGate.getID()] = set()
 
 #print gatesMap
 #print inCons
 
 # done reading file
 f.close()
+
+print inCons
+print outCons
 
 """
 #The following code only works for the "test1.bench" test
@@ -175,6 +178,11 @@ dim = int(math.sqrt(numGates * 2))
 # choose locations for ios
 # input will be at some location in the first column
 # output will be at some location in the last column
+
+#print type(gates[0].getID())
+
+
+"""
 for each in inputs:
     row = random.randrange(0, dim)
     ios.append((gatesMap[each], (0, row)))
@@ -194,7 +202,7 @@ for each in testPlace._gates:
 # placement from delay tables
 testPlace.place()
 print testPlace._grid
-
+"""
 
 # problems from c432.bench
 # many gates are very slow to build the delay tables
@@ -213,8 +221,9 @@ print testPlace._grid
 
 # NOTE: another thing is output, probably need to write the grid and delay tables
 # to files. Beautify output as well.
-
+"""
 print inCons[gatesMap[307]]
 for each in inCons[gatesMap[307]]:
     print each
 print outCons[gatesMap[307]]
+"""

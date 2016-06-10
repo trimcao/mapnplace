@@ -24,6 +24,9 @@ class Gate:
     def __str__(self):
         return str(self._name)
 
+    def getID(self):
+        return self._name
+
     def isIO(self):
         return self._isIO
 
