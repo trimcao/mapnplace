@@ -276,6 +276,7 @@ class Placement:
         locations = self.getLocations()
         possibleLocs = []
         for each in self._gates:
+            print 'Doing gate: ' + str(each)
             # each gate will have another dict. Format of information:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
             # inside locOpt[currentGate] is another dict
@@ -285,6 +286,7 @@ class Placement:
                 possibleLocs = locations
             # process each possible location
             for loc in possibleLocs:
+                #print str(each) + ' ' + str(loc)
                 # initialize to find the maxDelay
                 maxDelay = each.getDelay()
                 for fanin in self._grid.getInputs(each):

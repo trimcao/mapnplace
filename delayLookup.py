@@ -5,6 +5,8 @@ Email: tricao@utdallas.edu
 Date: June 2016
 """
 
+# The following data come from TI 45nm process
+
 table = {}
 table['NAND'] = 30
 table['NOR'] = 40
