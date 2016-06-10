@@ -106,9 +106,9 @@ class Grid:
         self._inCons = inCons
         self._outCons = outCons
         for gate in self._gates:
-            if (not gate in self._inCons):
+            if (not gate.getID() in self._inCons):
                 self.inCons[gate] = set()
-            if (not gate in self._outCons):
+            if (not gate.getID() in self._outCons):
                 self.outCons[gate] = set()
         # we need to sort each time we do a new placement
         self._topoSorter = TopoSort()
@@ -242,10 +242,10 @@ class Placement:
         self._locOpt = dict()
         for each in self._gates:
             # each delay table is a dictionary itself
-            self._delayTables[each] = dict()
-            self._locOpt[each] = dict()
+            self._delayTables[each.getID()] = dict()
+            self._locOpt[each.getID()] = dict()
             for loc in self._locations:
-                self._locOpt[each][loc] = dict()
+                self._locOpt[each.getID()][loc] = dict()
 
     def getLocations(self):
         """
@@ -256,6 +256,7 @@ class Placement:
     def setLocOpt(self, outGate, locOut, inGate, locIn):
         """
         Set the optimal location for the fanin while doing placement
+        Note: outGate and inGate are IDs (not actual Gate object)
         """
         self._locOpt[outGate][locOut][inGate] = locIn
 
@@ -292,7 +293,8 @@ class Placement:
                 #print str(each) + ' ' + str(loc)
                 # initialize to find the maxDelay
                 maxDelay = each.getDelay()
-                for fanin in self._grid.getInputs(each):
+                for fanin in self._grid.getInputs(each.getID()):
+                    # NOTE: fanin is only integer, not gate object
                     minDelay = float('inf')
                     minInLoc = (-1, -1)
                     # we only need to consider the locations present in the delay table
@@ -306,12 +308,12 @@ class Placement:
                             minDelay = delay
                             minInLoc = inLoc
                     # remember the optimal location for the fanin
-                    self.setLocOpt(each, loc, fanin, minInLoc)
+                    self.setLocOpt(each.getID(), loc, fanin, minInLoc)
                     # update the maxDelay
                     if (minDelay > maxDelay):
                         maxDelay = minDelay
                 # update delay for current loc in delay table
-                self.setDelay(each, loc, maxDelay)
+                self.setDelay(each.getID(), loc, maxDelay)
 
     def getDelayTable(self, gate):
         """
@@ -334,9 +336,10 @@ class Placement:
             # put the IOs to their fixed location
             if (currentGate.isIO()):
                 loc = self._grid.getIOLoc(currentGate)
-                self._grid.fill(currentGate, loc[0], loc[1])
+                self._grid.fill(currentGate.getID(), loc[0], loc[1])
             else:
-                fanout = list(self._grid.getOutputs(currentGate))[0] # we only deal with trees
+                # fanout should be an object
+                fanout = list(self._grid.getOutputs(currentGate.getID()))[0] # we only deal with trees
                 if (fanout.isIO()):
                     fanoutLoc = self._grid.getIOLoc(fanout)
                 else:

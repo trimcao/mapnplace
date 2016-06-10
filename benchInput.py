@@ -182,7 +182,6 @@ dim = int(math.sqrt(numGates * 2))
 #print type(gates[0].getID())
 
 
-"""
 for each in inputs:
     row = random.randrange(0, dim)
     ios.append((gatesMap[each], (0, row)))
@@ -198,11 +197,11 @@ gridTest = pt.Grid(dim, dim, ios, gates, inCons, outCons)
 testPlace = pt.Placement(gridTest, pt.manhattanDelay)
 testPlace.buildTables()
 for each in testPlace._gates:
-    print testPlace.delayTableToStr(each)
+    print testPlace.delayTableToStr(each.getID())
 # placement from delay tables
-testPlace.place()
-print testPlace._grid
-"""
+#testPlace.place()
+#print testPlace._grid
+
 
 # problems from c432.bench
 # many gates are very slow to build the delay tables
