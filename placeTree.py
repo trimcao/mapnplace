@@ -214,6 +214,9 @@ class Grid:
         """
         self._gates = self._topoSorter.sort(self._gates, self._outCons)
 
+    def getGatesMap(self):
+        return self._gatesMap
+
 
 class Placement:
     """
@@ -228,6 +231,7 @@ class Placement:
         """
         self._grid = grid
         self._delayModel = delayModel
+        self._gatesMap = grid.getGatesMap()
         # represent the delay tables by dictionaries
         self._delayTables = dict()
         self._locations = []
@@ -241,10 +245,10 @@ class Placement:
         self._locOpt = dict()
         for each in self._gates:
             # each delay table is a dictionary itself
-            self._delayTables[each.getID()] = dict()
-            self._locOpt[each.getID()] = dict()
+            self._delayTables[each] = dict()
+            self._locOpt[each] = dict()
             for loc in self._locations:
-                self._locOpt[each.getID()][loc] = dict()
+                self._locOpt[each][loc] = dict()
 
     def getLocations(self):
         """
@@ -278,28 +282,30 @@ class Placement:
         width = self._grid.getWidth()
         locations = self.getLocations()
         possibleLocs = []
+        
+        gatesMap = self._gatesMap
         for each in self._gates:
             print 'Doing gate: ' + str(each)
             # each gate will have another dict. Format of information:
             # locOpt[currentGate][loc][fanin] = optimal loc for that fanin
             # inside locOpt[currentGate] is another dict
-            if each.isIO():
-                possibleLocs = [self._grid.getIOLoc(each.getID())]
+            if gatesMap[each].isIO():
+                possibleLocs = [self._grid.getIOLoc(each)]
             else:
                 possibleLocs = locations
             # process each possible location
             for loc in possibleLocs:
                 #print str(each) + ' ' + str(loc)
                 # initialize to find the maxDelay
-                maxDelay = each.getDelay()
-                for fanin in self._grid.getInputs(each.getID()):
+                maxDelay = gatesMap[each].getDelay()
+                for fanin in self._grid.getInputs(each):
                     # NOTE: fanin is only integer, not gate object
                     minDelay = float('inf')
                     minInLoc = (-1, -1)
                     # we only need to consider the locations present in the delay table
                     for inLoc in self._delayTables[fanin].keys():
                         inDelay = self._delayTables[fanin][inLoc]
-                        delay = inDelay + self._delayModel(loc, inLoc) + each.getDelay()
+                        delay = inDelay + self._delayModel(loc, inLoc) + gatesMap[each].getDelay()
                         # find the min delay
                         # NOTE: we might have multiple minDelay, that leads to
                         # multiple solutions
@@ -307,12 +313,12 @@ class Placement:
                             minDelay = delay
                             minInLoc = inLoc
                     # remember the optimal location for the fanin
-                    self.setLocOpt(each.getID(), loc, fanin, minInLoc)
+                    self.setLocOpt(each, loc, fanin, minInLoc)
                     # update the maxDelay
                     if (minDelay > maxDelay):
                         maxDelay = minDelay
                 # update delay for current loc in delay table
-                self.setDelay(each.getID(), loc, maxDelay)
+                self.setDelay(each, loc, maxDelay)
 
     def getDelayTable(self, gate):
         """
@@ -330,16 +336,17 @@ class Placement:
         """
         This method will do the actual placement using the delay tables.
         """
+        gatesMap = self._gatesMap
         for i in range(len(self._gates) - 1, -1, -1):
             currentGate = self._gates[i]
             # put the IOs to their fixed location
-            if (currentGate.isIO()):
+            if (gatesMap[currentGate].isIO()):
                 loc = self._grid.getIOLoc(currentGate)
-                self._grid.fill(currentGate.getID(), loc[0], loc[1])
+                self._grid.fill(currentGate, loc[0], loc[1])
             else:
                 # fanout should be an object
-                fanout = list(self._grid.getOutputs(currentGate.getID()))[0] # we only deal with trees
-                if (fanout.isIO()):
+                fanout = list(self._grid.getOutputs(currentGate))[0] # we only deal with trees
+                if (gatesMap[fanout].isIO()):
                     fanoutLoc = self._grid.getIOLoc(fanout)
                 else:
                     fanoutLoc = self._grid.getLoc(fanout)

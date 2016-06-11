@@ -28,8 +28,8 @@ def isNumber(s):
 #filename = raw_input('Enter the input file name: ')
 #print
 #filename = "test1.bench"
-filename = "c17.bench"
-#filename = "c432.bench"
+#filename = "c17.bench"
+filename = "c432.bench"
 #filename = "c880.bench"
 # initialize the lists
 # assume gates is a list of gatesID, not actual gates
@@ -176,7 +176,7 @@ print testPlace1._grid
 # dimensions: possibly square for easy test, sqrt(#gates*6)
 numGates = len(gatesMap)
 #print numGates
-dim = int(math.sqrt(numGates * 6))
+dim = int(math.sqrt(numGates * 2))
 #print dim
 
 # choose locations for ios
@@ -200,16 +200,16 @@ for each in outputs:
 gridTest = pt.Grid(dim, dim, ios, gatesMap, inCons, outCons)
 gridTest.topoSort()
 print gridTest._gates
-"""
+
 # test Placement
 testPlace = pt.Placement(gridTest, pt.manhattanDelay)
 testPlace.buildTables()
 for each in testPlace._gates:
-    print testPlace.delayTableToStr(each.getID())
+    print testPlace.delayTableToStr(each)
 # placement from delay tables
-#testPlace.place()
-#print testPlace._grid
-"""
+testPlace.place()
+print testPlace._grid
+
 
 # problems from c432.bench
 # many gates are very slow to build the delay tables
