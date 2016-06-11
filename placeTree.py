@@ -6,9 +6,6 @@ Email: tricao@utdallas.edu
 Date: April 2016
 """
 
-# NOTE: what I need to do: optimize the code, add user input feature (user can
-# add a grid and add input and output
-
 class Gate:
     """
     this class represents a gate in the circuits
@@ -76,7 +73,7 @@ class Grid:
     the class also takes care of positioning of gates, and position of IO nodes
     Grid will contain the interconnection data between gates
     """
-    def __init__(self, height, width, ios, gates, inCons = {}, outCons = {}):
+    def __init__(self, height, width, ios, gatesMap, inCons = {}, outCons = {}):
         """
         IOs are represented as gates with fixed positions
         inputs and outputs are list of IOs and their positions (as tuple)
@@ -100,16 +97,17 @@ class Grid:
             self._IOLocs[each[0]] = each[1]
         # store the locations of all gates in the locs dict
         self._locs = dict()
-        self._gates = gates
+        self._gates = gatesMap.keys()
         # NOTE: may be a better idea to initialize the inCons and outCons with
         # all gates in the grid.
         self._inCons = inCons
         self._outCons = outCons
-        for gate in self._gates:
-            if (not gate.getID() in self._inCons):
-                self.inCons[gate] = set()
-            if (not gate.getID() in self._outCons):
-                self.outCons[gate] = set()
+        #for gate in self._gates:
+        #    if (not gate.getID() in self._inCons):
+        #        self.inCons[gate] = set()
+        #    if (not gate.getID() in self._outCons):
+        #        self.outCons[gate] = set()
+
         # we need to sort each time we do a new placement
         self._topoSorter = TopoSort()
 

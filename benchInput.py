@@ -32,11 +32,14 @@ filename = "test1.bench"
 #filename = "c432.bench"
 #filename = "c880.bench"
 # initialize the lists
+# assume gates is a list of gatesID, not actual gates
+# it seems we don't need gates list because we can get a list gates from
+# gatesMap.keys()
 gates = []
 ios = []
 inputs = []
 outputs = []
-gatesID = set()
+#gatesID = set()
 gatesMap = dict()
 inCons = {}
 outCons = {}
@@ -87,7 +90,7 @@ for line in f:
                 gatesMap[iden] = newGate
                 inCons[newGate.getID()] = set()
                 outCons[newGate.getID()] = set()
-                gates.append(newGate)
+                #gates.append(newGate)
             # add the connection
             for fanin in cons:
                 gateIn = int(fanin)
@@ -121,8 +124,7 @@ for line in f:
                 outputs.append(iden)
             # build the io gate
             newGate = pt.Gate(iden, delay=0, IO=True)
-            gates.append(newGate)
-            #gatesID.add(iden)
+            #gates.append(newGate)
             gatesMap[iden] = newGate
             #ios.append(newGate)
             inCons[newGate.getID()] = set()
@@ -172,7 +174,7 @@ print testPlace1._grid
 
 
 # dimensions: possibly square for easy test, sqrt(#gates*6)
-numGates = len(gates)
+numGates = len(gatesMap)
 #print numGates
 dim = int(math.sqrt(numGates * 6))
 #print dim
@@ -195,8 +197,8 @@ for each in outputs:
 
 
 # Try test1.bench data
-gridTest = pt.Grid(dim, dim, ios, gates, inCons, outCons)
-
+gridTest = pt.Grid(dim, dim, ios, gatesMap, inCons, outCons)
+"""
 # test Placement
 testPlace = pt.Placement(gridTest, pt.manhattanDelay)
 testPlace.buildTables()
@@ -205,7 +207,7 @@ for each in testPlace._gates:
 # placement from delay tables
 #testPlace.place()
 #print testPlace._grid
-
+"""
 
 # problems from c432.bench
 # many gates are very slow to build the delay tables
