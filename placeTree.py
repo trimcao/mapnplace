@@ -98,6 +98,7 @@ class Grid:
         # store the locations of all gates in the locs dict
         self._locs = dict()
         self._gates = gatesMap.keys()
+        self._gatesMap = gatesMap
         # NOTE: may be a better idea to initialize the inCons and outCons with
         # all gates in the grid.
         self._inCons = inCons

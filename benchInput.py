@@ -27,8 +27,8 @@ def isNumber(s):
 # create gate list and ios list
 #filename = raw_input('Enter the input file name: ')
 #print
-filename = "test1.bench"
-#filename = "c17.bench"
+#filename = "test1.bench"
+filename = "c17.bench"
 #filename = "c432.bench"
 #filename = "c880.bench"
 # initialize the lists
@@ -198,6 +198,8 @@ for each in outputs:
 
 # Try test1.bench data
 gridTest = pt.Grid(dim, dim, ios, gatesMap, inCons, outCons)
+gridTest.topoSort()
+print gridTest._gates
 """
 # test Placement
 testPlace = pt.Placement(gridTest, pt.manhattanDelay)
