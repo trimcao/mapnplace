@@ -61,7 +61,7 @@ class TopoSort:
         if not (gate in self.visited):
             # check if key 'gate' existed in the outputs dict
             if (gate in outputs):
-                for each in outputs[gate]:
+                for each in outputs[gate]
                     self.visit(each, outputs)
             self.visited.add(gate)
             self.result.insert(0, gate)
@@ -303,7 +303,8 @@ class Placement:
                     minDelay = float('inf')
                     minInLoc = (-1, -1)
                     # we only need to consider the locations present in the delay table
-                    for inLoc in self._delayTables[fanin].keys():
+                    #for inLoc in self._delayTables[fanin].keys():
+                    for inLoc in self._delayTables[fanin]:
                         inDelay = self._delayTables[fanin][inLoc]
                         delay = inDelay + self._delayModel(loc, inLoc) + gatesMap[each].getDelay()
                         # find the min delay
