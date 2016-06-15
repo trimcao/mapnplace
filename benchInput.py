@@ -27,9 +27,9 @@ def isNumber(s):
 # create gate list and ios list
 #filename = raw_input('Enter the input file name: ')
 #print
-#filename = "test1.bench"
+filename = "test1.bench"
 #filename = "c17.bench"
-filename = "c432.bench"
+#filename = "c432.bench"
 #filename = "c880.bench"
 # initialize the lists
 # assume gates is a list of gatesID, not actual gates
@@ -130,9 +130,6 @@ for line in f:
             inCons[newGate.getID()] = set()
             outCons[newGate.getID()] = set()
 
-#print gatesMap
-#print inCons
-
 # done reading file
 f.close()
 
@@ -211,26 +208,27 @@ testPlace.place()
 print testPlace._grid
 
 
-# problems from c432.bench
-# many gates are very slow to build the delay tables
-# need to study the gates
-# example: 307, 282, 292, 276
-# slow gates: 193, 194, 191, 192, 171, 189, 168, 199
-
-# need to investigate possible reasons:
-# - grid too big (yes)
-# - not efficient max, min finding
-# - use of nested dicts is slow?
-
 # Possible solutions:
 # - do not use complex object as dictionary: gate object, tuple, etc.
-# The best key type is integer. Need to think how to avoid Loc as key.
+# The best key type is integer.
+# - avoid using dict altogether, because all gates are integer
 
-# NOTE: another thing is output, probably need to write the grid and delay tables
-# to files. Beautify output as well.
-"""
-print inCons[gatesMap[307]]
-for each in inCons[gatesMap[307]]:
-    print each
-print outCons[gatesMap[307]]
-"""
+
+# OUTPUT TO FILES
+# What should we output:
+# All delay tables: Gate name, then delay table. Might align later. 
+# Gate placement: just simple - gate [space] location (col, row)
+for each in testPlace._gatesPlace:
+    print str(each) + ' ' + str(testPlace._gatesPlace[each])
+
+fileOut = open('test1.out', 'w')
+
+for each in testPlace._gates:
+    fileOut.write('Gate ' + str(each) + ' delay table: \n')
+    fileOut.write(testPlace.delayTableToStr(each))
+    fileOut.write('\n')
+fileOut.write('Final placement: \n')
+for each in testPlace._gatesPlace:
+    fileOut.write(str(each) + ' ' + str(testPlace._gatesPlace[each]))
+    fileOut.write('\n')
+

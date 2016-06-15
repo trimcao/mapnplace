@@ -61,7 +61,7 @@ class TopoSort:
         if not (gate in self.visited):
             # check if key 'gate' existed in the outputs dict
             if (gate in outputs):
-                for each in outputs[gate]
+                for each in outputs[gate]:
                     self.visit(each, outputs)
             self.visited.add(gate)
             self.result.insert(0, gate)
@@ -249,6 +249,8 @@ class Placement:
             self._locOpt[each] = dict()
             for loc in self._locations:
                 self._locOpt[each][loc] = dict()
+        # final placement for each gate
+        self._gatesPlace = dict()
 
     def getLocations(self):
         """
@@ -344,6 +346,7 @@ class Placement:
             if (gatesMap[currentGate].isIO()):
                 loc = self._grid.getIOLoc(currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
+                self._gatesPlace[currentGate] = loc
             else:
                 # fanout should be an object
                 fanout = list(self._grid.getOutputs(currentGate))[0] # we only deal with trees
@@ -353,6 +356,7 @@ class Placement:
                     fanoutLoc = self._grid.getLoc(fanout)
                 loc = self.getOptLoc(fanout, fanoutLoc, currentGate)
                 self._grid.fill(currentGate, loc[0], loc[1])
+                self._gatesPlace[currentGate] = loc
 
     def delayTableToStr(self, gate):
         """
